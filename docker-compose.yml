@@ -1,0 +1,70 @@
+services:
+
+  # ---------- 1. Base de données ----------
+  mongodb:
+    image: mongo:7.0
+    container_name: restaurant-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db          # persistance : dossier où MongoDB stocke ses données
+    networks:
+      - restaurant_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------- 2. Importer Python (Dockerfile personnel) ----------
+  importer:
+    build: .                            # construit l'image avec ./Dockerfile
+    container_name: restaurant-importer
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/   # "mongodb" = nom du service, pas localhost
+      DB_NAME: restaurant_db
+    depends_on:
+      mongodb:
+        condition: service_healthy      # attend que MongoDB soit réellement prêt
+    networks:
+      - restaurant_net
+
+  # ---------- 3. Interface web ----------
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: restaurant-mongo-express
+    restart: on-failure
+    ports:
+      - "8081:8081"                     # http://localhost:8081
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"   # affiche toutes les bases
+      ME_CONFIG_BASICAUTH: "false"             # pas de login (démo locale uniquement)
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - restaurant_net
+  # ---------- 4. Application web ----------
+  app:
+    build: .
+    container_name: restaurant-app
+    command: python app.py
+    ports:
+      - "5000:5000"                     # http://localhost:5000
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/
+      DB_NAME: restaurant_db
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      importer:
+        condition: service_completed_successfully   # tsenna l'import ysali
+    networks:
+      - restaurant_net
+
+networks:
+  restaurant_net:
+
+volumes:
+  mongodb_data:
