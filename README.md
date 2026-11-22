@@ -158,13 +158,5 @@ python importer.py
 ```
 3. **GitHub** : `git add .` / `git commit -m "Vercel"` / `git push`.
 4. **Vercel** : Add New → Project → importer le repository → Framework Preset **Other** → variables `MONGO_URI` et `DB_NAME=restaurant_db` → **Deploy**.
-
-
-### Mise à jour importante pour Vercel
-
-- Le fichier `requirements.txt` installe `pymongo[srv]` (donc le support DNS SRV) et `certifi` (certificats CA TLS).
-- Sur Vercel, ajouter `MONGO_URI` et `DB_NAME` dans **Settings → Environment Variables**, puis redéployer.
-- `MONGO_URI` doit être l'URI Atlas `mongodb+srv://...`, sans espaces et avec le mot de passe correctement encodé si nécessaire. Ne jamais publier cette URI sur GitHub.
-- Vérifier dans Atlas que le cluster est actif, que l'utilisateur Database Access existe et que Network Access autorise les connexions de l'application. Pour un test, `0.0.0.0/0` autorise toutes les adresses IP : à utiliser seulement avec un mot de passe fort et en comprenant le risque.
-- Les collections `clients`, `plats` et `commandes` doivent déjà être importées dans Atlas avec `importer.py` avant d'ouvrir le site.
-- Après toute modification de `requirements.txt` ou `app.py`, faire un nouveau déploiement Vercel.
+## Lien de Projet  :
+https://application-de-gestion-du-restauran-ashen.vercel.app/
